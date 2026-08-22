@@ -1,0 +1,2 @@
+"""Curo backend package."""
+
