@@ -9,6 +9,8 @@ import httpx
 from .cache import CacheStore
 from .config import Settings
 
+PHOENIX_TIMEZONE = timezone(timedelta(hours=-7), name="America/Phoenix")
+
 
 class FortyGuardError(RuntimeError):
     """Raised when a FortyGuard request cannot be completed."""
@@ -105,6 +107,7 @@ def hour_payload(lat: float, lon: float, value: datetime, half_size: float = 0.0
     """Build a documented single-hour heatmap request around a point."""
 
     timestamp = hour_floor(value)
+    local_timestamp = timestamp.astimezone(PHOENIX_TIMEZONE)
     polygon = [
         [lon - half_size, lat - half_size],
         [lon + half_size, lat - half_size],
@@ -114,7 +117,7 @@ def hour_payload(lat: float, lon: float, value: datetime, half_size: float = 0.0
     ]
     return {
         "polygon_aoi": {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": [polygon]}}]},
-        "date_time": {"start_date": timestamp.strftime("%Y-%m-%d"), "start_time": timestamp.strftime("%H:%M"), "filter_type": 1},
+        "date_time": {"start_date": local_timestamp.strftime("%Y-%m-%d"), "start_time": local_timestamp.strftime("%H:%M"), "filter_type": 1},
         "granularity": 100,
     }
 
@@ -124,3 +127,9 @@ def forecast_hours(now: datetime | None = None) -> list[datetime]:
 
     start = hour_floor(now or datetime.now(timezone.utc))
     return [start + timedelta(hours=index) for index in range(12)]
+
+
+def phoenix_hour(value: datetime) -> str:
+    """Format a UTC forecast timestamp as Phoenix local time for display."""
+
+    return value.astimezone(PHOENIX_TIMEZONE).strftime("%H:%M")

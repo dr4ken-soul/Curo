@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 from .cache import CacheStore
 from .config import get_settings
-from .fortyguard import FortyGuardClient, FortyGuardError, forecast_hours, hour_floor, hour_payload
+from .fortyguard import FortyGuardClient, FortyGuardError, forecast_hours, hour_floor, hour_payload, phoenix_hour
 from .model import classify, margin, percentiles, window
 from .normalise import features, normalise_heatmap
 
@@ -69,7 +69,7 @@ async def forecast_for_site(site: dict[str, Any]) -> list[dict[str, Any]]:
         data = await fetch_hour(site, timestamp, "forecast")
         if data["meanTempF"] is None:
             raise FortyGuardError("FortyGuard returned no readable temperature values")
-        output.append({"timestamp": data["timestamp"], "hour": timestamp.strftime("%H:%M"), "tempF": data["meanTempF"], "source": data["source"]})
+        output.append({"timestamp": data["timestamp"], "hour": phoenix_hour(timestamp), "tempF": data["meanTempF"], "source": data["source"]})
     return output
 
 
@@ -218,4 +218,3 @@ async def export_ics(site_id: str = Query(alias="siteId")) -> PlainTextResponse:
     lines.append("END:VCALENDAR")
     filename = f"curo-pour-plan-{datetime.now(timezone.utc).date().isoformat()}.ics"
     return PlainTextResponse("\r\n".join(lines) + "\r\n", media_type="text/calendar", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
-

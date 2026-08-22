@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from curo.model import classify, margin, percentiles, window
+from curo.fortyguard import hour_payload
 
 
 def test_classify_uses_aci_limit_and_amber_band() -> None:
@@ -25,3 +26,8 @@ def test_percentiles_and_window() -> None:
     assert result["worst"] == "red"
     assert result["hours"][0]["marginF"] == -7.0
 
+
+def test_heatmap_request_uses_phoenix_local_time() -> None:
+    payload = hour_payload(33.4484, -112.0740, datetime(2026, 8, 23, 12, tzinfo=timezone.utc))
+    assert payload["date_time"]["start_date"] == "2026-08-23"
+    assert payload["date_time"]["start_time"] == "05:00"
