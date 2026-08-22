@@ -83,6 +83,12 @@ class CacheStore:
                 (key, json.dumps(payload), timestamp),
             )
 
+    def delete(self, key: str) -> None:
+        """Remove one invalid or empty cached response."""
+
+        with self._connection() as connection:
+            connection.execute("DELETE FROM api_cache WHERE key = ?", (key,))
+
     def newest(self) -> tuple[dict[str, Any], int] | None:
         """Return the newest cached provider payload."""
 

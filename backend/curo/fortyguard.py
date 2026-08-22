@@ -36,7 +36,9 @@ class FortyGuardClient:
         cached = self.cache.get(key)
         if cached is not None:
             response, fetched_at = cached
-            return {"payload": response, "source": "cached", "fetchedAt": fetched_at, "requestedSource": source}
+            if self._has_temperature_output(response):
+                return {"payload": response, "source": "cached", "fetchedAt": fetched_at, "requestedSource": source}
+            self.cache.delete(key)
         if not self.configured:
             raise FortyGuardError("FORTYGUARD_API_KEY is not configured")
 
@@ -55,8 +57,26 @@ class FortyGuardClient:
                 raise FortyGuardError(f"FortyGuard returned {error.response.status_code}: {detail}") from error
             except httpx.HTTPError as error:
                 raise FortyGuardError(f"FortyGuard network error: {error}") from error
-        self.cache.set(key, completed)
+        if self._has_temperature_output(completed):
+            self.cache.set(key, completed)
         return {"payload": completed, "source": source, "fetchedAt": int(datetime.now(timezone.utc).timestamp()), "requestedSource": source}
+
+    @staticmethod
+    def _has_temperature_output(response: dict[str, Any]) -> bool:
+        """Return whether a completed response contains usable heat data."""
+
+        data = response.get("data", {})
+        result = data.get("result", data) if isinstance(data, dict) else {}
+        if not isinstance(result, dict):
+            return False
+        map_data = result.get("map_data", {})
+        if isinstance(map_data, dict) and map_data.get("features"):
+            return True
+        stats = result.get("stats_data", {})
+        if not isinstance(stats, dict):
+            return False
+        temperature_stats = stats.get("temperature_stats", stats.get("Temperature_stats", {}))
+        return isinstance(temperature_stats, dict) and any(key in temperature_stats for key in ("mean", "Mean", "minimum", "Minimum", "maximum", "Maximum"))
 
     async def _poll(self, client: httpx.AsyncClient, headers: dict[str, str], activity_id: str) -> dict[str, Any]:
         """Poll one activity until it completes or fails."""
@@ -95,7 +115,7 @@ def hour_payload(lat: float, lon: float, value: datetime, half_size: float = 0.0
     return {
         "polygon_aoi": {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": [polygon]}}]},
         "date_time": {"start_date": timestamp.strftime("%Y-%m-%d"), "start_time": timestamp.strftime("%H:%M"), "filter_type": 1},
-        "granularity": "100m",
+        "granularity": 100,
     }
 
 
@@ -104,4 +124,3 @@ def forecast_hours(now: datetime | None = None) -> list[datetime]:
 
     start = hour_floor(now or datetime.now(timezone.utc))
     return [start + timedelta(hours=index) for index in range(12)]
-
