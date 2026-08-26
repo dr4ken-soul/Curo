@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from curo.model import classify, margin, percentiles, window
 from curo.fortyguard import hour_payload
+from curo.normalise import normalise_heatmap
 
 
 def test_classify_uses_aci_limit_and_amber_band() -> None:
@@ -31,3 +32,28 @@ def test_heatmap_request_uses_phoenix_local_time() -> None:
     payload = hour_payload(33.4484, -112.0740, datetime(2026, 8, 23, 12, tzinfo=timezone.utc))
     assert payload["date_time"]["start_date"] == "2026-08-23"
     assert payload["date_time"]["start_time"] == "05:00"
+
+
+def test_normalise_reads_fortyguard_average_temperature_cells() -> None:
+    result = normalise_heatmap(
+        {
+            "data": {
+                "result": {
+                    "map_data": {
+                        "type": "FeatureCollection",
+                        "features": [
+                            {
+                                "type": "Feature",
+                                "properties": {"average_temperature": 33.86},
+                                "geometry": {"type": "Polygon", "coordinates": [[[1, 2], [3, 2], [3, 4], [1, 2]]]}
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "2026-08-26T10:00:00Z",
+        "live",
+    )
+    assert len(result["cells"]) == 1
+    assert result["cells"][0]["tempF"] == 92.9

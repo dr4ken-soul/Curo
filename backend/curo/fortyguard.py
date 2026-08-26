@@ -119,6 +119,7 @@ def hour_payload(lat: float, lon: float, value: datetime, half_size: float = 0.0
         "polygon_aoi": {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": [polygon]}}]},
         "date_time": {"start_date": local_timestamp.strftime("%Y-%m-%d"), "start_time": local_timestamp.strftime("%H:%M"), "filter_type": 1},
         "granularity": 100,
+        "analytic_type": "tcm",
     }
 
 

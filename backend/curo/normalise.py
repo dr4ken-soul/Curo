@@ -22,7 +22,7 @@ def _number(value: Any) -> float | None:
 def temperature_celsius(properties: dict[str, Any]) -> float | None:
     """Find a temperature value in known GeoJSON property names."""
 
-    for key in ("temperature_celsius", "temperature", "temp_c", "temp", "tcm", "value", "mean"):
+    for key in ("temperature_celsius", "average_temperature", "temperature", "temp_c", "temp", "tcm", "value", "mean"):
         value = _number(properties.get(key))
         if value is not None:
             return value
@@ -74,4 +74,3 @@ def normalise_heatmap(result: dict[str, Any], timestamp: str, source: str) -> di
     mean_c = stats_temperature_celsius(result)
     mean_f = celsius_to_fahrenheit(mean_c) if mean_c is not None else (round(sum(values) / len(values), 1) if values else None)
     return {"cells": output_cells, "meanTempF": mean_f, "minTempF": min(values) if values else None, "maxTempF": max(values) if values else None, "timestamp": timestamp, "source": source}
-
