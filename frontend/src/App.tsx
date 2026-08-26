@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { getCells, getClimatology, getForecast, getSites, getWindow, apiGetText } from './lib/api'
+import { getCells, getClimatology, getSites, getWindow, apiGetText } from './lib/api'
 import type { Cell, DayWindow, ForecastHour, ModelWindow, Site } from './lib/types'
 import { TopBar } from './components/layout/TopBar'
 import { MapCell } from './components/console/MapCell'
@@ -37,12 +37,11 @@ export default function App() {
       const currentSite = sites[0]
       if (!currentSite) throw new Error('no construction site configured')
       setSite(currentSite)
-      const results = await Promise.allSettled([getCells(currentSite), getForecast(currentSite.id), getClimatology(currentSite.id), getWindow(currentSite.id)])
+      const results = await Promise.allSettled([getCells(currentSite), getClimatology(currentSite.id), getWindow(currentSite.id)])
       const nextErrors: string[] = []
       const cellsResult = results[0]; if (cellsResult.status === 'fulfilled') { setCells(cellsResult.value.cells); setSelected(cellsResult.value.cells[0] || null) } else nextErrors.push(cellsResult.reason instanceof Error ? cellsResult.reason.message : 'map data request failed')
-      const forecastResult = results[1]; if (forecastResult.status === 'fulfilled') setForecast(forecastResult.value.forecast); else nextErrors.push(forecastResult.reason instanceof Error ? forecastResult.reason.message : 'forecast request failed')
-      const daysResult = results[2]; if (daysResult.status === 'fulfilled') setDays(daysResult.value.days); else nextErrors.push(daysResult.reason instanceof Error ? daysResult.reason.message : 'history request failed')
-      const modelResult = results[3]; if (modelResult.status === 'fulfilled') { setModel(modelResult.value); setForecast(modelResult.value.hours); const breach = modelResult.value.hours.find((hour) => hour.status === 'red'); if (breach) setAlertHour(breach) } else nextErrors.push(modelResult.reason instanceof Error ? modelResult.reason.message : 'model request failed')
+      const daysResult = results[1]; if (daysResult.status === 'fulfilled') setDays(daysResult.value.days); else nextErrors.push(daysResult.reason instanceof Error ? daysResult.reason.message : 'history request failed')
+      const modelResult = results[2]; if (modelResult.status === 'fulfilled') { setModel(modelResult.value); setForecast(modelResult.value.hours); const breach = modelResult.value.hours.find((hour) => hour.status === 'red'); if (breach) setAlertHour(breach) } else nextErrors.push(modelResult.reason instanceof Error ? modelResult.reason.message : 'model request failed')
       setErrors([...new Set(nextErrors)])
     } catch (error) { setErrors([error instanceof Error ? error.message : 'api request failed']) }
   }, [])
@@ -60,4 +59,3 @@ export default function App() {
   const action = useMemo(() => site ? { csv: () => void triggerDownload(csvPath, 'curo-pour-plan.csv'), ics: () => void triggerDownload(icsPath, 'curo-pour-plan.ics') } : { csv: () => undefined, ics: () => undefined }, [csvPath, icsPath, site, triggerDownload])
   return <div className="relative min-h-screen overflow-hidden bg-bg"><div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true"><div className="absolute -left-24 -top-24 h-[420px] w-[520px] rounded-full bg-blueprint blur-[140px] animate-breathe-a" /><div className="absolute -bottom-32 -right-20 h-[440px] w-[560px] rounded-full bg-accent blur-[150px] animate-breathe-b" /></div><TopBar timestamp={timestamp} onExport={openDrawer} providerReady={errors.length === 0 && Boolean(site)} exportRef={exportRef} /><main className="relative z-0 grid grid-cols-12 gap-4 px-4 pb-4 lg:min-h-[calc(100vh-76px)] lg:px-6"><div className="col-span-12 grid min-h-0 grid-cols-12 gap-4 lg:col-span-12"><MapCell site={site || { id: 'site-01', name: 'downtown Phoenix', lat: 33.4484, lon: -112.074, thickness: 8, mass: false, pour_cost: 12000, re_pour_co2: 0.9 }} cells={cells} selected={selected} onSelect={setSelected} error={errors[0]} timestamp={cells.length ? timestamp : undefined} source={cells[0]?.source} /><DecisionRail site={site || { id: 'site-01', name: 'downtown Phoenix', lat: 33.4484, lon: -112.074, thickness: 8, mass: false, pour_cost: 12000, re_pour_co2: 0.9 }} forecast={forecast} days={days} model={model} errors={errors} onExportCsv={openDrawer} onExportIcs={openDrawer} onRetry={() => void loadData()} onAlert={() => { const breach = model?.hours.find((hour) => hour.status === 'red'); if (breach) setAlertHour(breach) }} /></div></main><BreachAlert alertHour={alertHour} reopenedHour={reopenedHour} onDismiss={clearAlert} onReschedule={reschedule} /><ExportDrawer open={drawerOpen} csvPreview={csvPreview} error={exportError} onClose={closeDrawer} onDownloadCsv={action.csv} onDownloadIcs={action.ics} /><GrainOverlay /></div>
 }
-

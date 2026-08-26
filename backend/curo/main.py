@@ -77,7 +77,7 @@ def history_dates() -> list[datetime]:
     """Return one same-calendar-day sample per year since 2021."""
 
     now = datetime.now(timezone.utc)
-    return [datetime(year, now.month, now.day, 12, tzinfo=timezone.utc) for year in range(2021, now.year + 1)]
+    return [datetime(year, now.month, now.day, 12, tzinfo=timezone.utc) for year in range(2021, now.year)]
 
 
 async def climatology_for_site(site: dict[str, Any]) -> dict[str, Any]:
