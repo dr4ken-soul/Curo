@@ -2,9 +2,13 @@ import type { Cell, DayWindow, ModelWindow, Site, ForecastHour } from './types'
 
 const apiRoot = '/api'
 
+function apiUrl(path: string): string {
+  return path.startsWith(apiRoot) ? path : `${apiRoot}${path}`
+}
+
 /** Fetch JSON from the Curo backend and preserve a useful error message. */
 export async function apiGet<T>(path: string): Promise<T> {
-  const response = await fetch(`${apiRoot}${path}`)
+  const response = await fetch(apiUrl(path))
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { detail?: { message?: string } | string }
     const detail = typeof body.detail === 'string' ? body.detail : body.detail?.message
@@ -15,7 +19,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 
 /** Fetch text from the Curo backend for export previews and downloads. */
 export async function apiGetText(path: string): Promise<string> {
-  const response = await fetch(`${apiRoot}${path}`)
+  const response = await fetch(apiUrl(path))
   if (!response.ok) throw new Error(`export request failed with ${response.status}`)
   return response.text()
 }
@@ -45,4 +49,3 @@ export async function getClimatology(siteId: string): Promise<{ days: DayWindow[
 export async function getWindow(siteId: string): Promise<ModelWindow> {
   return apiGet(`/sites/${encodeURIComponent(siteId)}/window`)
 }
-
