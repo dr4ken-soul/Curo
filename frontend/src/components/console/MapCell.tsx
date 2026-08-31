@@ -23,7 +23,7 @@ export function MapCell({ site, cells, timestamp, source, selected, onSelect, er
   const selectedCell = selected || cells[0]
   return <motion.section className="relative col-span-12 min-h-[420px] overflow-hidden rounded-xl border border-line-2 bg-bg-2 lg:col-span-7 lg:min-h-0" initial={{ opacity: 0, filter: 'blur(10px)', scale: 0.98 }} animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}>
     <MapContainer center={[site.lat, site.lon]} zoom={13} zoomControl={false} attributionControl className="absolute inset-0 z-10">
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>' />
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' />
       {cells.map((cell) => <Polygon key={cell.id} positions={polygonPositions(cell.bounds)} pathOptions={{ color: 'rgba(253, 254, 254, 0.7)', weight: 1, fillColor: heatColour(cell.tempF), fillOpacity: 0.8 }} eventHandlers={{ click: () => onSelect(cell) }} />)}
     </MapContainer>
     <FadeBlur delay={0.45}><div className="absolute left-4 top-4 z-20 max-w-[250px] rounded-lg border border-line-2 bg-elevated/95 p-3 backdrop-blur-sm">
@@ -37,4 +37,3 @@ export function MapCell({ site, cells, timestamp, source, selected, onSelect, er
     <FadeBlur delay={0.55}><div className="absolute right-4 top-4 z-20 rounded-full border border-line-2 bg-elevated/90 px-3 py-1.5 backdrop-blur-sm"><span className="font-mono text-[0.6875rem] tabular-nums text-text-2">{timestamp || 'waiting for api'} · {source || 'no source'}</span></div></FadeBlur>
   </motion.section>
 }
-
