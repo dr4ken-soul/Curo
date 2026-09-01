@@ -1,5 +1,6 @@
 """Runtime settings for the Curo API."""
 
+import os
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,7 +11,7 @@ class Settings(BaseSettings):
 
     fortyguard_api_key: str | None = None
     fortyguard_base_url: str = "https://api.fortyguard.com/v1"
-    curo_db_path: str = "./curo.sqlite3"
+    curo_db_path: str = "/tmp/curo.sqlite3" if os.getenv("VERCEL") else "./curo.sqlite3"
     curo_poll_seconds: float = 2.0
     curo_poll_attempts: int = 30
 
@@ -22,4 +23,3 @@ def get_settings() -> Settings:
     """Return the process settings singleton."""
 
     return Settings()
-

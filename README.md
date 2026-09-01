@@ -56,6 +56,14 @@ npm run dev
 
 Open `http://localhost:5173`.
 
+## Deploy to Vercel
+
+The repository includes `vercel.json` for Vercel Services. It deploys the Vite frontend and FastAPI backend under one public domain, routing `/` to the frontend and `/api/*` to the backend.
+
+In Vercel, import the `master` branch, keep the project framework set to `Services`, and add `FORTYGUARD_API_KEY` as an environment variable for Production and Preview. Do not commit the key. Curo uses Vercel's writable `/tmp` directory for its temporary SQLite cache.
+
+After deployment, open the public URL in a private window and check that the map, forecast, history, and export preview load before submitting the URL.
+
 ## Checks
 
 ```powershell
@@ -79,4 +87,3 @@ npm run build
 ## Recording
 
 The recording is silent. Use [RECORDING_GUIDE.md](RECORDING_GUIDE.md) for the complete take sequence. The app itself provides the labels, provenance, breach margin, and export preview.
-
